@@ -18,6 +18,7 @@ import net.spaceeye.someperipherals.stuff.BallisticFunctions.rad
 import net.spaceeye.someperipherals.stuff.utils.*
 import org.joml.Quaternionf
 import org.valkyrienskies.mod.common.getShipManagingPos
+import org.valkyrienskies.mod.common.getShipMountedTo
 import java.lang.Math.*
 
 interface IBlockRes {
@@ -304,7 +305,7 @@ object RaycastFunctions {
         //https://gamedev.stackexchange.com/questions/190054/how-to-calculate-the-forward-up-right-vectors-using-the-rotation-angles
         val p = rad(entity.xRot.toDouble()) // picth
         val y =-rad(entity.yHeadRot.toDouble()) // yaw
-        val unit_d = if (euler_mode) {
+        var unit_d = if (euler_mode) {
             eulerRotationCalc(Quaternionf().rotateXYZ(y.toFloat(), -p.toFloat(), PI.toFloat()), var1, var2)
         } else {
             val up  = Vector3d(sin(p)*sin(y),  cos(p), sin(p)*cos(y))
@@ -312,6 +313,13 @@ object RaycastFunctions {
             val right = Vector3d(-cos(y), 0, sin(y))
 
             vectorRotationCalc(Pair(dir, up), var1, var2, var3, right)
+        }
+
+        if (SomePeripherals.has_vs) {
+            val ship = getShipMountedTo(entity)
+            if (ship != null) {
+                unit_d = Vector3d(ship.transform.transformDirectionNoScalingFromShipToWorld(unit_d.toJomlVector3d(), unit_d.toJomlVector3d()))
+            }
         }
 
         return commonMakeRaycastObj(level, start, unit_d, distance, start, entity, check_for_blocks_in_world, onlyDistance)
